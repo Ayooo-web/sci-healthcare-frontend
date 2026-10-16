@@ -46,6 +46,15 @@ export const config = {
   sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN ?? '',
 } as const;
 
+/**
+ * True unless the app is built for Stellar's public network.
+ *
+ * Every testnet-only piece of UI branches on this: the header network badge,
+ * the faucet and its notices, and the footer disclaimer. A production build
+ * (`NEXT_PUBLIC_STELLAR_NETWORK=public`) therefore hides all of it.
+ */
+export const isTestnet = config.network !== 'public';
+
 export function requireContracts(): void {
   required('NEXT_PUBLIC_VOUCHER_CONTRACT_ID', config.contracts.voucher);
   required('NEXT_PUBLIC_REGISTRY_CONTRACT_ID', config.contracts.registry);

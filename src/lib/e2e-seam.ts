@@ -23,7 +23,7 @@ export type MockRpcCall = {
 declare global {
   interface Window {
     __SCI_MOCK_WALLET__?: { address: string };
-    __SCI_MOCK_RPC__?: { calls: MockRpcCall[] };
+    __SCI_MOCK_RPC__?: { calls: MockRpcCall[]; delayMs?: number };
   }
 }
 
@@ -40,4 +40,14 @@ export function isMockRpc(): boolean {
 
 export function recordMockCall(call: MockRpcCall): void {
   window.__SCI_MOCK_RPC__?.calls.push(call);
+}
+
+/**
+ * How long a mock write should stay in flight, in milliseconds. Lets a test
+ * hold a transaction pending long enough to observe the unload guard.
+ */
+export function mockRpcDelayMs(): number {
+  if (typeof window === 'undefined') return 0;
+  const delay = window.__SCI_MOCK_RPC__?.delayMs ?? 0;
+  return Number.isFinite(delay) && delay > 0 ? delay : 0;
 }

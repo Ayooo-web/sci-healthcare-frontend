@@ -1,7 +1,8 @@
 import type { xdr } from '@stellar/stellar-sdk';
 
 import { config } from './config';
-import { isMockRpc, recordMockCall } from './e2e-seam';
+import { isMockRpc, mockRpcDelayMs, recordMockCall } from './e2e-seam';
+import { beginPendingTransaction } from './pending-tx';
 
 /**
  * Stellar SDK access.
@@ -52,6 +53,24 @@ export async function invokeContract(
   walletAddress: string,
   sign: SignFn,
 ): Promise<{ hash: string; returnValue: unknown }> {
+  // The whole round trip counts as pending: while it runs, the app warns
+  // before the tab is closed or reloaded (see pending-tx.ts and
+  // PendingTransactionGuard).
+  const finish = beginPendingTransaction();
+  try {
+    return await invoke(contractId, method, args, walletAddress, sign);
+  } finally {
+    finish();
+  }
+}
+
+async function invoke(
+  contractId: string,
+  method: string,
+  args: xdr.ScVal[],
+  walletAddress: string,
+  sign: SignFn,
+): Promise<{ hash: string; returnValue: unknown }> {
   // Playwright end-to-end tests (see e2e-seam.ts): record the invocation and
   // return a canned submission instead of building, simulating and sending
   // a real transaction. Crafting Soroban simulation payloads over HTTP
@@ -59,6 +78,9 @@ export async function invokeContract(
   // `{ hash, returnValue }` shape the UI consumes.
   if (isMockRpc()) {
     recordMockCall({ kind: 'invoke', contractId, method });
+    // A test can keep a write in flight to observe the unload guard.
+    const delay = mockRpcDelayMs();
+    if (delay > 0) await new Promise((r) => setTimeout(r, delay));
     return { hash: 'ab'.repeat(32), returnValue: mockReturnValue(method) };
   }
 

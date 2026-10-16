@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { ConnectButton } from '@/components/ConnectButton';
 import { Analytics } from '@/components/Analytics';
 import { ErrorReporter } from '@/components/ErrorReporter';
+import { NetworkBadge } from '@/components/NetworkBadge';
+import { PendingTransactionGuard } from '@/components/PendingTransactionGuard';
 import { NavLink } from '@/components/ui';
 import { WalletProvider } from '@/lib/wallet';
-import { config } from '@/lib/config';
+import { config, isTestnet } from '@/lib/config';
 
 import './globals.css';
 
@@ -22,10 +24,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {config.plausibleDomain ? <Analytics domain={config.plausibleDomain} /> : null}
         <ErrorReporter />
+        <PendingTransactionGuard />
         <WalletProvider>
           <header className="border-b border-[var(--color-line)] bg-[var(--color-surface)]">
-            <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
-              <div className="flex items-center gap-6">
+            <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3 sm:px-6">
+              <div className="flex min-w-0 items-center gap-6">
                 <Link href="/" className="flex items-center gap-2 font-semibold">
                   <span
                     aria-hidden
@@ -42,7 +45,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <NavLink href="/attest">Attest</NavLink>
                 </nav>
               </div>
-              <ConnectButton />
+              <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+                <NetworkBadge />
+                <ConnectButton />
+              </div>
             </div>
           </header>
 
@@ -50,9 +56,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
           <footer className="mx-auto max-w-6xl px-6 pb-10 text-xs text-[var(--color-ink-soft)]">
             <p>
-              Testnet deployment. No real funds, and no patient health information is
-              stored on chain — vouchers reference a service category and an opaque
-              beneficiary reference only.
+              {isTestnet
+                ? 'Testnet deployment. No real funds, and no patient health information is stored on chain — vouchers reference a service category and an opaque beneficiary reference only.'
+                : 'No patient health information is stored on chain — vouchers reference a service category and an opaque beneficiary reference only.'}
             </p>
           </footer>
         </WalletProvider>

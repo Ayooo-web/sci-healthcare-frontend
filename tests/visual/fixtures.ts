@@ -62,6 +62,8 @@ export const providersList = {
       country: 'NG',
       status: 'Active',
       registeredAt: '2026-04-01T00:00:00.000Z',
+      // Published coordinates (contracts #10 metadata): appears on the map.
+      location: { lat: 6.6018, lng: 3.3515 },
       services,
     },
     {
@@ -70,6 +72,7 @@ export const providersList = {
       country: 'NG',
       status: 'Active',
       registeredAt: '2026-04-10T00:00:00.000Z',
+      // No published location: listed below the map instead.
       services: services.slice(0, 2),
     },
   ],

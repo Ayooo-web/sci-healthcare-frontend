@@ -10,6 +10,8 @@ export type Service = {
   active?: boolean;
 };
 
+export type ProviderLocation = { lat: number; lng: number };
+
 export type Provider = {
   address: string;
   name: string;
@@ -17,7 +19,38 @@ export type Provider = {
   status: 'Pending' | 'Active' | 'Suspended';
   registeredAt: string;
   services: Service[];
+  /** Published coordinates, when the clinic has chosen to share them. */
+  location?: ProviderLocation | null;
+  /** Provider metadata; coordinates may instead live under `location`. */
+  metadata?: { location?: ProviderLocation | null } | null;
 };
+
+/**
+ * The coordinates a clinic has published, or null.
+ *
+ * Providers are read from the indexer, which mirrors the on-chain provider
+ * metadata (contracts #10). Not every clinic publishes a location, and some
+ * deploy at one — so this validates rather than trusting the payload, and
+ * callers treat null as "kept off the map, still in the list".
+ */
+export function providerLocation(p: Provider): ProviderLocation | null {
+  const raw = p.location ?? p.metadata?.location ?? null;
+  if (!raw) return null;
+  const { lat, lng } = raw;
+  if (
+    typeof lat !== 'number' ||
+    typeof lng !== 'number' ||
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lng) ||
+    lat < -90 ||
+    lat > 90 ||
+    lng < -180 ||
+    lng > 180
+  ) {
+    return null;
+  }
+  return { lat, lng };
+}
 
 export type VoucherStatus =
   | 'Funded'

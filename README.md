@@ -49,7 +49,7 @@ Contract ids are already in `vercel.json`. Vercel will prompt for one variable,
 
 | Route | Who it is for | What it does |
 | --- | --- | --- |
-| `/` | Anyone | Verified clinic directory with live service pricing |
+| `/` | Anyone | Verified clinic directory with live service pricing, plus a map view of clinics with published locations |
 | `/clinics/[address]` | Funders | Pick a service and fund a voucher |
 | `/my` | Funders and patients | Vouchers you funded; dispute, refund, settle; care history lookup |
 | `/clinic` | Clinics | Register, list services, mark patients seen |
@@ -110,6 +110,8 @@ Every one of these is inlined into the client bundle at **build** time.
 | `NEXT_PUBLIC_SENTRY_DSN` | `(optional) Sentry DSN for error reporting; unset disables it entirely` |
 
 > If the deployed app still calls `localhost`, these were set in the host's **runtime** environment but not its **build** environment. Next inlines `NEXT_PUBLIC_*` at build time; setting them afterwards changes nothing. This is the single most common deployment failure for this shape of app.
+
+`NEXT_PUBLIC_STELLAR_NETWORK` also drives the header badge and every testnet-only feature through a single `isTestnet` helper (`src/lib/config.ts`). Setting it to `public` builds for mainnet: the badge reads **Mainnet**, and the faucet, its notices and the footer disclaimer are hidden.
 
 ## Analytics
 

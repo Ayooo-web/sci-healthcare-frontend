@@ -1,4 +1,4 @@
-import { config } from './config';
+import { config, isTestnet } from './config';
 import { arg, invokeContract, readContract, type SignFn } from './stellar';
 
 /**
@@ -202,7 +202,9 @@ export const registry = {
 };
 
 export const faucet = {
-  enabled: (): boolean => Boolean(config.contracts.faucet),
+  // Testnet only, even if a faucet id leaks into a mainnet build: the
+  // contract mints demo USDC to anyone, which must never surface as real.
+  enabled: (): boolean => isTestnet && Boolean(config.contracts.faucet),
 
   /** drip(to) -> i128. Mints the daily amount of test USDC to `to`. */
   async drip(to: string, sign: SignFn) {

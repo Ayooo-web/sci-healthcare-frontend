@@ -17,14 +17,22 @@ import type { MockRpcCall } from '@/lib/e2e-seam';
 declare global {
   interface Window {
     __SCI_MOCK_WALLET__?: { address: string };
-    __SCI_MOCK_RPC__?: { calls: MockRpcCall[] };
+    __SCI_MOCK_RPC__?: { calls: MockRpcCall[]; delayMs?: number };
   }
 }
 
-export async function useMockWallet(page: Page, address: string): Promise<void> {
+/**
+ * `delayMs` keeps mocked writes in flight for that long, so a test can
+ * observe the unload guard during a pending transaction.
+ */
+export async function useMockWallet(
+  page: Page,
+  address: string,
+  delayMs = 0,
+): Promise<void> {
   await page.addInitScript(
     `window.__SCI_MOCK_WALLET__ = { address: '${address}' };
-     window.__SCI_MOCK_RPC__ = { calls: [] };`,
+     window.__SCI_MOCK_RPC__ = { calls: [], delayMs: ${delayMs} };`,
   );
   // The analytics script tag is present in the test build; keep the request
   // itself inside the sandbox. (The analytics spec stubs window.plausible,
@@ -34,12 +42,14 @@ export async function useMockWallet(page: Page, address: string): Promise<void> 
 
 export type BackendState = {
   provider?: Record<string, unknown>;
+  /** Several providers at once, e.g. for the map's located/unlocated split. */
+  providers?: Record<string, unknown>[];
   vouchers?: Record<string, unknown>[];
   voucherById?: Record<string, unknown>;
 };
 
 export async function mockBackend(page: Page, state: BackendState): Promise<void> {
-  const providers = state.provider ? [state.provider] : [];
+  const providers = state.providers ?? (state.provider ? [state.provider] : []);
   await page.route('http://localhost:8080/**', (route) => {
     const url = new URL(route.request().url());
     const parts = url.pathname.split('/').filter(Boolean);
